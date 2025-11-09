@@ -1,21 +1,23 @@
 {
-    "short_name": "QR Scanner",
-    "name": "Simple QR Scanner PWA",
-    "icons": [
-        {
-            "src": "icon.png",
-            "type": "image/png",
-            "sizes": "192x192"
-        },
-        {
-            "src": "icon.png",
-            "type": "image/png",
-            "sizes": "512x512"
-        }
-    ],
-    "start_url": "/",
-    "background_color": "#ffffff",
-    "theme_color": "#007bff",
-    "display": "standalone",
-    "orientation": "portrait"
+  "name": "QR Code Scanner",
+  "short_name": "QR-Scanner",
+  "description": "Progressive Web App for scanning QR codes",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#1a2a6c",
+  "theme_color": "#4a90e2",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgdmlld0JveD0iMCAwIDE5MiAxOTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxOTIiIGhlaWdodD0iMTkyIiByeD0iMjQiIGZpbGw9IiM0QTkwRTIiLz4KPHN0eWxlPi50ZXh0IHsgZmlsbDogd2hpdGU7IGZvbnQtZmFtaWx5OiBzYW5zLXNlcmlmOyBmb250LXNpemU6IDgwcHg7IH08L3N0eWxlPgo8dGV4dCB4PSI1MCUiIHk9IjU1JSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgY2xhc3M9InRleHQiPuKXjTwvdGV4dD4KPC9zdmc+",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgdmlld0JveD0iMCAwIDUxMiA1MTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiByeD0iNjQiIGZpbGw9IiM0QTkwRTIiLz4KPHN0eWxlPi50ZXh0IHsgZmlsbDogd2hpdGU7IGZvbnQtZmFtaWx5OiBzYW5zLXNlcmlmOyBmb250LXNpemU6IDI0MHB4OyB9PC9zdHlsZT4KPHRleHQgeD0iNTAlIiB5PSI1NSUiIGRvbWluYW50LWJhc2VsaW5lPSJtaWRkbGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGNsYXNzPSJ0ZXh0Ij7il408L3RleHQ+Cjwvc3ZnPg==",
+      "sizes": "512x512",
+      "type": "image/svg+xml"
+    }
+  ],
+  "categories": ["utilities", "productivity"]
 }

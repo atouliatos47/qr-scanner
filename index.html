@@ -3,42 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QR Scanner PWA</title>
+    <title>QR Code Scanner</title>
+    <meta name="theme-color" content="#4a90e2">
+    <meta name="description" content="A Progressive Web App for scanning QR codes">
     <link rel="manifest" href="manifest.json">
-    <link rel="icon" href="icon.png" type="image/png">
-    <style>
-        body { margin: 0; padding: 0; font-family: sans-serif; background: blue; text-align: center; }
-        #scanner { position: relative; width: 100%; max-width: 400px; margin: 20px auto; }
-        video { width: 100%; border: 2px solid #333; border-radius: 8px; }
-        canvas { display: none; }
-        #result { margin-top: 20px; padding: 10px; background: white; border: 1px solid #ccc; border-radius: 8px; word-break: break-all; }
-        button { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
-        button:hover { background: #0056b3; }
-    </style>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📱</text></svg>">
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <h1>QR Scanner</h1>
-    <div id="scanner">
-        <video id="preview"></video>
-        <canvas id="canvas"></canvas>
+    <header>
+        <h1>QR Code Scanner</h1>
+        <p class="subtitle">Scan QR codes directly from your browser</p>
+    </header>
+    
+    <div class="container">
+        <div class="scanner-container">
+            <video id="video" playsinline></video>
+            <div class="scanner-overlay">
+                <div class="scanner-frame">
+                    <div class="scan-line"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button id="start-btn">
+                <span>Start Scanner</span>
+            </button>
+            <button id="stop-btn" disabled>
+                <span>Stop Scanner</span>
+            </button>
+        </div>
+        
+        <div class="status" id="status">Scanner is ready. Click "Start Scanner" to begin.</div>
+        
+        <div class="result" id="result" style="display: none;">
+            <h2>Scan Result</h2>
+            <div id="result-text"></div>
+            <div class="actions">
+                <button class="action-btn" id="copy-btn">Copy</button>
+                <button class="action-btn" id="open-btn">Open Link</button>
+                <button class="action-btn" id="clear-btn">Clear</button>
+            </div>
+        </div>
     </div>
-    <button id="startBtn">Start Scanning</button>
-    <div id="result"></div>
+    
+    <button class="install-btn" id="install-btn">Install App</button>
+    
+    <footer>
+        <p>Progressive Web App QR Code Scanner</p>
+    </footer>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
+    <!-- Include jsQR library for actual QR code scanning -->
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
     <script src="app.js"></script>
-
-    <!-- Register service worker for PWA -->
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js').then(reg => {
-                    console.log('Service Worker registered!', reg);
-                }).catch(err => {
-                    console.log('Service Worker registration failed:', err);
-                });
-            });
-        }
-    </script>
 </body>
 </html>
