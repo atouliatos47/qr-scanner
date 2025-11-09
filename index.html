@@ -3,266 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#2196F3">
-    <title>QR Code Scanner</title>
+    <title>QR Scanner PWA</title>
     <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="icon-192.png">
+    <link rel="icon" href="icon.png" type="image/png">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #2196F3;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        .container {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        .scanner-wrapper {
-            position: relative;
-            width: 100%;
-            max-width: 350px;
-            aspect-ratio: 1;
-            margin-bottom: 30px;
-        }
-
-        #reader {
-            width: 100%;
-            height: 100%;
-            position: relative;
-        }
-
-        /* Red corner brackets */
-        .scanner-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            pointer-events: none;
-            z-index: 10;
-        }
-
-        .corner {
-            position: absolute;
-            width: 60px;
-            height: 60px;
-            border: 4px solid #FF3B30;
-        }
-
-        .corner.top-left {
-            top: 20px;
-            left: 20px;
-            border-right: none;
-            border-bottom: none;
-            border-radius: 8px 0 0 0;
-        }
-
-        .corner.top-right {
-            top: 20px;
-            right: 20px;
-            border-left: none;
-            border-bottom: none;
-            border-radius: 0 8px 0 0;
-        }
-
-        .corner.bottom-left {
-            bottom: 20px;
-            left: 20px;
-            border-right: none;
-            border-top: none;
-            border-radius: 0 0 0 8px;
-        }
-
-        .corner.bottom-right {
-            bottom: 20px;
-            right: 20px;
-            border-left: none;
-            border-top: none;
-            border-radius: 0 0 8px 0;
-        }
-
-        .scan-line {
-            position: absolute;
-            left: 20px;
-            right: 20px;
-            height: 3px;
-            background: linear-gradient(90deg, transparent, #FF3B30, transparent);
-            top: 50%;
-            transform: translateY(-50%);
-            animation: scan 2s ease-in-out infinite;
-        }
-
-        @keyframes scan {
-            0%, 100% { top: 20px; opacity: 0; }
-            50% { top: 50%; opacity: 1; }
-        }
-
-        .buttons {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            width: 100%;
-            max-width: 300px;
-        }
-
-        button {
-            width: 100%;
-            padding: 16px;
-            border: none;
-            border-radius: 50px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            transition: all 0.2s;
-        }
-
-        #scan-btn {
-            background: white;
-            color: #2196F3;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-        }
-
-        #scan-btn:active {
-            transform: scale(0.98);
-        }
-
-        #cancel-btn {
-            background: transparent;
-            color: white;
-            border: 2px solid white;
-            display: none;
-        }
-
-        #cancel-btn:active {
-            transform: scale(0.98);
-        }
-
-        .result-box {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: white;
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 30px;
-            z-index: 100;
-        }
-
-        .result-box.show {
-            display: flex;
-        }
-
-        .result-text {
-            background: #f5f5f5;
-            padding: 20px;
-            border-radius: 12px;
-            word-break: break-all;
-            color: #333;
-            width: 100%;
-            max-width: 350px;
-            margin-bottom: 20px;
-            text-align: center;
-            font-size: 16px;
-        }
-
-        .result-buttons {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            width: 100%;
-            max-width: 300px;
-        }
-
-        #install-prompt {
-            background: rgba(0, 0, 0, 0.9);
-            color: white;
-            padding: 15px;
-            text-align: center;
-            display: none;
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            z-index: 1000;
-        }
-
-        #install-prompt button {
-            margin: 10px 5px 0;
-            padding: 10px 20px;
-            border-radius: 50px;
-        }
-
-        .install-btn {
-            background: #2196F3;
-            color: white;
-        }
-
-        .dismiss-btn {
-            background: transparent;
-            color: white;
-            border: 1px solid white !important;
-        }
-
-        .hidden {
-            display: none !important;
-        }
+        body { margin: 0; padding: 0; font-family: sans-serif; background: #f0f0f0; text-align: center; }
+        #scanner { position: relative; width: 100%; max-width: 400px; margin: 20px auto; }
+        video { width: 100%; border: 2px solid #333; border-radius: 8px; }
+        canvas { display: none; }
+        #result { margin-top: 20px; padding: 10px; background: white; border: 1px solid #ccc; border-radius: 8px; word-break: break-all; }
+        button { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #0056b3; }
     </style>
 </head>
 <body>
-    <div id="install-prompt">
-        <p>📲 Add to Home Screen</p>
-        <button class="install-btn" id="install-button">Install</button>
-        <button class="dismiss-btn" id="dismiss-install">Later</button>
+    <h1>QR Scanner</h1>
+    <div id="scanner">
+        <video id="preview"></video>
+        <canvas id="canvas"></canvas>
     </div>
+    <button id="startBtn">Start Scanning</button>
+    <div id="result"></div>
 
-    <div class="container">
-        <div class="scanner-wrapper">
-            <div id="reader"></div>
-            <div class="scanner-overlay">
-                <div class="corner top-left"></div>
-                <div class="corner top-right"></div>
-                <div class="corner bottom-left"></div>
-                <div class="corner bottom-right"></div>
-                <div class="scan-line hidden"></div>
-            </div>
-        </div>
-
-        <div class="buttons">
-            <button id="scan-btn">Scan Now</button>
-            <button id="cancel-btn">Cancel</button>
-        </div>
-    </div>
-
-    <div class="result-box" id="result-box">
-        <div class="result-text" id="result-text"></div>
-        <div class="result-buttons">
-            <button id="copy-btn">Copy</button>
-            <button id="close-btn">Close</button>
-        </div>
-    </div>
-
-    <script src="https://unpkg.com/html5-qrcode"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
     <script src="app.js"></script>
+
+    <!-- Register service worker for PWA -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js').then(reg => {
+                    console.log('Service Worker registered!', reg);
+                }).catch(err => {
+                    console.log('Service Worker registration failed:', err);
+                });
+            });
+        }
+    </script>
 </body>
 </html>
