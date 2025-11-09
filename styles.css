@@ -108,6 +108,10 @@ h1 {
     animation: scan 2s linear infinite;
 }
 
+.scanning .scan-line {
+    animation: scan 1s linear infinite;
+}
+
 @keyframes scan {
     0% { top: 0; }
     50% { top: 100%; }
@@ -135,27 +139,29 @@ button {
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
 
-#start-btn {
+#scan-btn {
     background-color: #4a90e2;
     color: white;
+    font-size: 1.1rem;
+    padding: 15px 30px;
 }
 
-#stop-btn {
-    background-color: #e74c3c;
-    color: white;
+#scan-btn:disabled {
+    background-color: #7aa7e0;
+    cursor: wait;
 }
 
-button:hover {
+button:hover:not(:disabled) {
     transform: translateY(-3px);
     box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
 }
 
-button:active {
+button:active:not(:disabled) {
     transform: translateY(0);
 }
 
 button:disabled {
-    opacity: 0.6;
+    opacity: 0.7;
     cursor: not-allowed;
     transform: none;
 }
@@ -189,13 +195,19 @@ button:disabled {
     display: flex;
     gap: 10px;
     margin-top: 15px;
+    flex-wrap: wrap;
+    justify-content: center;
 }
 
 .action-btn {
-    padding: 8px 16px;
+    padding: 10px 20px;
     font-size: 0.9rem;
     background-color: rgba(255, 255, 255, 0.2);
     color: white;
+}
+
+#new-scan-btn {
+    background-color: #4a90e2;
 }
 
 .install-btn {
@@ -226,13 +238,13 @@ button:disabled {
     margin-top: 10px;
 }
 
-.debug-info {
-    background: rgba(0, 0, 0, 0.3);
-    padding: 10px;
-    border-radius: 8px;
-    font-size: 0.8rem;
-    margin-top: 10px;
-    display: none;
+.success {
+    color: #2ecc71;
+}
+
+.scanning-indicator {
+    color: #4a90e2;
+    font-weight: bold;
 }
 
 footer {
@@ -253,5 +265,19 @@ footer {
     
     button {
         padding: 10px 20px;
+    }
+    
+    #scan-btn {
+        padding: 12px 24px;
+    }
+    
+    .actions {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .action-btn {
+        width: 100%;
+        max-width: 200px;
     }
 }

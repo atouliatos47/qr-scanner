@@ -1,14 +1,14 @@
 // DOM elements
 const video = document.getElementById('video');
-const startBtn = document.getElementById('start-btn');
-const stopBtn = document.getElementById('stop-btn');
+const scanBtn = document.getElementById('scan-btn');
 const status = document.getElementById('status');
 const result = document.getElementById('result');
 const resultText = document.getElementById('result-text');
 const copyBtn = document.getElementById('copy-btn');
 const openBtn = document.getElementById('open-btn');
-const clearBtn = document.getElementById('clear-btn');
+const newScanBtn = document.getElementById('new-scan-btn');
 const installBtn = document.getElementById('install-btn');
+const scannerContainer = document.querySelector('.scanner-container');
 
 // Variables
 let stream = null;
@@ -32,7 +32,7 @@ function init() {
         status.textContent = errorMsg;
         status.className = 'status error';
         console.error(errorMsg);
-        startBtn.disabled = true;
+        scanBtn.disabled = true;
         return;
     }
     
@@ -42,11 +42,10 @@ function init() {
     }
     
     // Set up event listeners
-    startBtn.addEventListener('click', startScanner);
-    stopBtn.addEventListener('click', stopScanner);
+    scanBtn.addEventListener('click', startScanner);
     copyBtn.addEventListener('click', copyResult);
     openBtn.addEventListener('click', openResult);
-    clearBtn.addEventListener('click', clearResult);
+    newScanBtn.addEventListener('click', resetScanner);
     
     // PWA installation
     window.addEventListener('beforeinstallprompt', (e) => {
@@ -69,6 +68,8 @@ function init() {
 async function startScanner() {
     try {
         console.log('Starting scanner...');
+        scanBtn.disabled = true;
+        scanBtn.textContent = "Scanning...";
         status.textContent = "Requesting camera permission...";
         status.className = 'status';
         
@@ -84,6 +85,7 @@ async function startScanner() {
         console.log('Camera access granted');
         
         video.srcObject = stream;
+        scannerContainer.classList.add('scanning');
         
         // Wait for video to be ready
         video.onloadedmetadata = () => {
@@ -91,11 +93,8 @@ async function startScanner() {
             video.play().then(() => {
                 console.log('Video playback started');
                 
-                // Enable/disable buttons
-                startBtn.disabled = true;
-                stopBtn.disabled = false;
-                
-                status.textContent = "Scanner active. Point at a QR code.";
+                status.textContent = "Scanning... Point camera at QR code";
+                status.className = 'status scanning-indicator';
                 scanning = true;
                 
                 // Start scanning for QR codes
@@ -104,6 +103,7 @@ async function startScanner() {
                 console.error('Error playing video:', err);
                 status.textContent = "Error starting video: " + err.message;
                 status.className = 'status error';
+                resetScanner();
             });
         };
         
@@ -111,6 +111,7 @@ async function startScanner() {
             console.error('Video error:', err);
             status.textContent = "Video error occurred";
             status.className = 'status error';
+            resetScanner();
         };
         
     } catch (err) {
@@ -129,12 +130,13 @@ async function startScanner() {
         
         status.textContent = errorMsg;
         status.className = 'status error';
+        resetScanner();
     }
 }
 
-// Stop the QR scanner
-function stopScanner() {
-    console.log('Stopping scanner...');
+// Reset the scanner for a new scan
+function resetScanner() {
+    console.log('Resetting scanner...');
     scanning = false;
     
     if (animationFrame) {
@@ -151,13 +153,17 @@ function stopScanner() {
     }
     
     video.srcObject = null;
+    scannerContainer.classList.remove('scanning');
     
-    // Enable/disable buttons
-    startBtn.disabled = false;
-    stopBtn.disabled = true;
+    // Reset UI
+    scanBtn.disabled = false;
+    scanBtn.textContent = "Scan QR Code";
+    scanBtn.innerHTML = '<span>Scan QR Code</span>';
     
-    status.textContent = "Scanner stopped.";
-    status.className = 'status';
+    if (!result.style.display || result.style.display === 'none') {
+        status.textContent = "Ready to scan. Click 'Scan QR Code' to begin.";
+        status.className = 'status';
+    }
 }
 
 // Scan for QR codes in video frames
@@ -189,7 +195,7 @@ function scanFrame() {
             } else {
                 console.error('jsQR library not loaded');
                 status.textContent = "QR scanning library not loaded. Please check your connection.";
-                stopScanner();
+                resetScanner();
                 return;
             }
         }
@@ -200,7 +206,7 @@ function scanFrame() {
         console.error('Error during scanning:', err);
         status.textContent = "Scanning error: " + err.message;
         status.className = 'status error';
-        stopScanner();
+        resetScanner();
     }
 }
 
@@ -217,10 +223,30 @@ function handleScanResult(data) {
     }
     
     status.textContent = "QR code detected!";
-    status.className = 'status';
+    status.className = 'status success';
     
-    // Stop scanning after a successful scan
-    stopScanner();
+    // Stop camera but keep result visible
+    scanning = false;
+    
+    if (animationFrame) {
+        cancelAnimationFrame(animationFrame);
+        animationFrame = null;
+    }
+    
+    if (stream) {
+        stream.getTracks().forEach(track => {
+            track.stop();
+        });
+        stream = null;
+    }
+    
+    video.srcObject = null;
+    scannerContainer.classList.remove('scanning');
+    
+    // Update scan button state
+    scanBtn.disabled = false;
+    scanBtn.textContent = "Scan QR Code";
+    scanBtn.innerHTML = '<span>Scan QR Code</span>';
 }
 
 // Copy result to clipboard
@@ -228,11 +254,7 @@ function copyResult() {
     navigator.clipboard.writeText(resultText.textContent)
         .then(() => {
             status.textContent = "Copied to clipboard!";
-            setTimeout(() => {
-                if (!scanning) {
-                    status.textContent = "Scanner ready. Click 'Start Scanner' to scan again.";
-                }
-            }, 2000);
+            status.className = 'status success';
         })
         .catch(err => {
             console.error("Failed to copy: ", err);
@@ -247,13 +269,6 @@ function openResult() {
     if (url.startsWith('http://') || url.startsWith('https://')) {
         window.open(url, '_blank');
     }
-}
-
-// Clear the result
-function clearResult() {
-    result.style.display = 'none';
-    status.textContent = "Scanner is ready. Click 'Start Scanner' to begin.";
-    status.className = 'status';
 }
 
 // Install the PWA
