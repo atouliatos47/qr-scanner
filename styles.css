@@ -154,6 +154,12 @@ button:active {
     transform: translateY(0);
 }
 
+button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
 .result {
     width: 100%;
     background-color: rgba(255, 255, 255, 0.1);
@@ -173,6 +179,10 @@ button:active {
 #result-text {
     word-break: break-all;
     line-height: 1.5;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 15px;
+    border-radius: 8px;
+    margin: 10px 0;
 }
 
 .actions {
@@ -205,6 +215,24 @@ button:active {
     text-align: center;
     font-size: 0.9rem;
     opacity: 0.8;
+    min-height: 20px;
+}
+
+.error {
+    color: #ff6b6b;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 10px;
+    border-radius: 8px;
+    margin-top: 10px;
+}
+
+.debug-info {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    margin-top: 10px;
+    display: none;
 }
 
 footer {

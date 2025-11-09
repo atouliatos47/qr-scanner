@@ -20,15 +20,25 @@ let deferredPrompt = null;
 
 // Initialize the app
 function init() {
+    console.log('Initializing QR Scanner...');
+    
     // Create canvas for QR code scanning
     canvas = document.createElement('canvas');
     context = canvas.getContext('2d');
     
     // Check if the browser supports mediaDevices
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        status.textContent = "Your browser doesn't support camera access. Please try a different browser.";
+        const errorMsg = "Your browser doesn't support camera access. Please try Chrome, Firefox, or Edge.";
+        status.textContent = errorMsg;
+        status.className = 'status error';
+        console.error(errorMsg);
         startBtn.disabled = true;
         return;
+    }
+    
+    // Check if we're on a secure context
+    if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+        console.warn('Camera access may not work without HTTPS or localhost');
     }
     
     // Set up event listeners
@@ -51,43 +61,80 @@ function init() {
     if (window.matchMedia('(display-mode: standalone)').matches) {
         installBtn.style.display = 'none';
     }
+    
+    console.log('QR Scanner initialized successfully');
 }
 
 // Start the QR scanner
 async function startScanner() {
     try {
+        console.log('Starting scanner...');
         status.textContent = "Requesting camera permission...";
+        status.className = 'status';
         
         // Get camera stream
         stream = await navigator.mediaDevices.getUserMedia({ 
             video: { 
-                facingMode: 'environment',
+                facingMode: 'environment', // Prefer rear camera
                 width: { ideal: 1280 },
                 height: { ideal: 720 }
             } 
         });
         
+        console.log('Camera access granted');
+        
         video.srcObject = stream;
-        await video.play();
         
-        // Enable/disable buttons
-        startBtn.disabled = true;
-        stopBtn.disabled = false;
+        // Wait for video to be ready
+        video.onloadedmetadata = () => {
+            console.log('Video metadata loaded');
+            video.play().then(() => {
+                console.log('Video playback started');
+                
+                // Enable/disable buttons
+                startBtn.disabled = true;
+                stopBtn.disabled = false;
+                
+                status.textContent = "Scanner active. Point at a QR code.";
+                scanning = true;
+                
+                // Start scanning for QR codes
+                scanFrame();
+            }).catch(err => {
+                console.error('Error playing video:', err);
+                status.textContent = "Error starting video: " + err.message;
+                status.className = 'status error';
+            });
+        };
         
-        status.textContent = "Scanner active. Point at a QR code.";
-        scanning = true;
-        
-        // Start scanning for QR codes
-        scanFrame();
+        video.onerror = (err) => {
+            console.error('Video error:', err);
+            status.textContent = "Video error occurred";
+            status.className = 'status error';
+        };
         
     } catch (err) {
         console.error("Error accessing camera:", err);
-        status.textContent = "Error accessing camera. Please make sure you've granted camera permissions.";
+        let errorMsg = "Error accessing camera: ";
+        
+        if (err.name === 'NotAllowedError') {
+            errorMsg += "Camera permission denied. Please allow camera access and try again.";
+        } else if (err.name === 'NotFoundError') {
+            errorMsg += "No camera found on your device.";
+        } else if (err.name === 'NotSupportedError') {
+            errorMsg += "Camera not supported in your browser.";
+        } else {
+            errorMsg += err.message;
+        }
+        
+        status.textContent = errorMsg;
+        status.className = 'status error';
     }
 }
 
 // Stop the QR scanner
 function stopScanner() {
+    console.log('Stopping scanner...');
     scanning = false;
     
     if (animationFrame) {
@@ -96,7 +143,10 @@ function stopScanner() {
     }
     
     if (stream) {
-        stream.getTracks().forEach(track => track.stop());
+        stream.getTracks().forEach(track => {
+            track.stop();
+            console.log('Stopped track:', track.kind);
+        });
         stream = null;
     }
     
@@ -107,35 +157,51 @@ function stopScanner() {
     stopBtn.disabled = true;
     
     status.textContent = "Scanner stopped.";
+    status.className = 'status';
 }
 
 // Scan for QR codes in video frames
 function scanFrame() {
     if (!scanning) return;
     
-    if (video.readyState === video.HAVE_ENOUGH_DATA) {
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        
-        // Draw video frame to canvas
-        context.drawImage(video, 0, 0, canvas.width, canvas.height);
-        
-        // Get image data for QR code scanning
-        const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-        
-        // Scan for QR code
-        const code = jsQR(imageData.data, imageData.width, imageData.height, {
-            inversionAttempts: "dontInvert",
-        });
-        
-        if (code) {
-            handleScanResult(code.data);
-            return; // Stop scanning after successful detection
+    try {
+        if (video.readyState === video.HAVE_ENOUGH_DATA && video.videoWidth > 0 && video.videoHeight > 0) {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            
+            // Draw video frame to canvas
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            // Get image data for QR code scanning
+            const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+            
+            // Scan for QR code using jsQR library
+            if (typeof jsQR !== 'undefined') {
+                const code = jsQR(imageData.data, imageData.width, imageData.height, {
+                    inversionAttempts: "dontInvert",
+                });
+                
+                if (code) {
+                    console.log('QR Code detected:', code.data);
+                    handleScanResult(code.data);
+                    return; // Stop scanning after successful detection
+                }
+            } else {
+                console.error('jsQR library not loaded');
+                status.textContent = "QR scanning library not loaded. Please check your connection.";
+                stopScanner();
+                return;
+            }
         }
+        
+        // Continue scanning
+        animationFrame = requestAnimationFrame(scanFrame);
+    } catch (err) {
+        console.error('Error during scanning:', err);
+        status.textContent = "Scanning error: " + err.message;
+        status.className = 'status error';
+        stopScanner();
     }
-    
-    // Continue scanning
-    animationFrame = requestAnimationFrame(scanFrame);
 }
 
 // Handle QR code scan result
@@ -151,6 +217,7 @@ function handleScanResult(data) {
     }
     
     status.textContent = "QR code detected!";
+    status.className = 'status';
     
     // Stop scanning after a successful scan
     stopScanner();
@@ -161,10 +228,16 @@ function copyResult() {
     navigator.clipboard.writeText(resultText.textContent)
         .then(() => {
             status.textContent = "Copied to clipboard!";
+            setTimeout(() => {
+                if (!scanning) {
+                    status.textContent = "Scanner ready. Click 'Start Scanner' to scan again.";
+                }
+            }, 2000);
         })
         .catch(err => {
             console.error("Failed to copy: ", err);
             status.textContent = "Failed to copy to clipboard.";
+            status.className = 'status error';
         });
 }
 
@@ -180,6 +253,7 @@ function openResult() {
 function clearResult() {
     result.style.display = 'none';
     status.textContent = "Scanner is ready. Click 'Start Scanner' to begin.";
+    status.className = 'status';
 }
 
 // Install the PWA
@@ -200,7 +274,7 @@ function installApp() {
 }
 
 // Initialize the app when the page loads
-window.addEventListener('DOMContentLoaded', init);
+document.addEventListener('DOMContentLoaded', init);
 
 // Service Worker registration for PWA functionality
 if ('serviceWorker' in navigator) {
