@@ -17,6 +17,10 @@ startBtn.addEventListener('click', () => {
 });
 
 function startScanning() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        resultDiv.textContent = 'Sorry, mate—your browser doesn\'t support camera access!';
+        return;
+    }
     navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
         .then(stream => {
             video.srcObject = stream;
@@ -24,7 +28,8 @@ function startScanning() {
             requestAnimationFrame(tick);
         })
         .catch(err => {
-            resultDiv.textContent = 'Error accessing camera: ' + err;
+            resultDiv.textContent = 'Oops! Camera error: ' + err.message + '. Check permissions or try HTTPS.';
+            console.error(err);
         });
 }
 
