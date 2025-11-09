@@ -1,12 +1,10 @@
-// QR Scanner App
+// Simple QR Scanner App
 let html5QrcodeScanner;
-let scanHistory = [];
 let deferredPrompt;
 
 // Initialize the app
 document.addEventListener('DOMContentLoaded', function() {
     initScanner();
-    loadHistory();
     setupInstallPrompt();
     registerServiceWorker();
 });
@@ -29,19 +27,20 @@ function initScanner() {
 function onScanSuccess(decodedText, decodedResult) {
     // Show result
     document.getElementById('result-text').textContent = decodedText;
-    document.getElementById('result-container').classList.add('active');
-    document.getElementById('status').textContent = '✅ QR Code scanned successfully!';
+    document.getElementById('result-box').classList.add('show');
     
-    // Check if it's a URL
-    const isUrl = decodedText.startsWith('http://') || decodedText.startsWith('https://');
-    document.getElementById('open-btn').style.display = isUrl ? 'block' : 'none';
-    
-    // Add to history
-    addToHistory(decodedText);
-    
-    // Play success sound (vibration on mobile)
+    // Vibrate on success
     if (navigator.vibrate) {
         navigator.vibrate(200);
+    }
+    
+    // If it's a URL, open it automatically
+    if (decodedText.startsWith('http://') || decodedText.startsWith('https://')) {
+        setTimeout(() => {
+            if (confirm('Open this link?\n\n' + decodedText)) {
+                window.open(decodedText, '_blank');
+            }
+        }, 500);
     }
 }
 
@@ -56,10 +55,13 @@ document.getElementById('copy-btn').addEventListener('click', function() {
     
     if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(resultText).then(() => {
-            showStatus('📋 Copied to clipboard!');
+            this.textContent = '✅ Copied!';
             if (navigator.vibrate) {
                 navigator.vibrate(100);
             }
+            setTimeout(() => {
+                this.textContent = '📋 Copy';
+            }, 2000);
         }).catch(err => {
             fallbackCopy(resultText);
         });
@@ -68,7 +70,7 @@ document.getElementById('copy-btn').addEventListener('click', function() {
     }
 });
 
-// Fallback copy method for older browsers
+// Fallback copy method
 function fallbackCopy(text) {
     const textArea = document.createElement('textarea');
     textArea.value = text;
@@ -78,94 +80,15 @@ function fallbackCopy(text) {
     textArea.select();
     try {
         document.execCommand('copy');
-        showStatus('📋 Copied to clipboard!');
+        const btn = document.getElementById('copy-btn');
+        btn.textContent = '✅ Copied!';
+        setTimeout(() => {
+            btn.textContent = '📋 Copy';
+        }, 2000);
     } catch (err) {
-        showStatus('❌ Failed to copy');
+        alert('Failed to copy');
     }
     document.body.removeChild(textArea);
-}
-
-// Open link in new tab
-document.getElementById('open-btn').addEventListener('click', function() {
-    const resultText = document.getElementById('result-text').textContent;
-    window.open(resultText, '_blank');
-});
-
-// Add to scan history
-function addToHistory(text) {
-    const timestamp = new Date().toLocaleString();
-    const historyItem = {
-        text: text,
-        time: timestamp
-    };
-    
-    // Add to beginning of array
-    scanHistory.unshift(historyItem);
-    
-    // Keep only last 10 items
-    if (scanHistory.length > 10) {
-        scanHistory = scanHistory.slice(0, 10);
-    }
-    
-    // Save to localStorage
-    localStorage.setItem('qr-scan-history', JSON.stringify(scanHistory));
-    
-    // Update display
-    displayHistory();
-}
-
-// Load history from localStorage
-function loadHistory() {
-    const saved = localStorage.getItem('qr-scan-history');
-    if (saved) {
-        scanHistory = JSON.parse(saved);
-        displayHistory();
-    }
-}
-
-// Display history items
-function displayHistory() {
-    const historyList = document.getElementById('history-list');
-    
-    if (scanHistory.length === 0) {
-        historyList.innerHTML = '<div class="history-item" style="opacity: 0.6;">No recent scans</div>';
-        return;
-    }
-    
-    historyList.innerHTML = scanHistory.map(item => `
-        <div class="history-item" onclick="showHistoryItem('${escapeHtml(item.text)}')">
-            <div class="history-text">${escapeHtml(item.text)}</div>
-            <div class="history-time">${item.time}</div>
-        </div>
-    `).join('');
-}
-
-// Show history item in result area
-function showHistoryItem(text) {
-    document.getElementById('result-text').textContent = text;
-    document.getElementById('result-container').classList.add('active');
-    
-    const isUrl = text.startsWith('http://') || text.startsWith('https://');
-    document.getElementById('open-btn').style.display = isUrl ? 'block' : 'none';
-    
-    // Scroll to result
-    document.getElementById('result-container').scrollIntoView({ behavior: 'smooth' });
-}
-
-// Escape HTML to prevent XSS
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
-// Show status message
-function showStatus(message) {
-    const status = document.getElementById('status');
-    status.textContent = message;
-    setTimeout(() => {
-        status.textContent = 'Camera ready - Point at a QR code to scan';
-    }, 3000);
 }
 
 // PWA Install Prompt
@@ -180,9 +103,6 @@ function setupInstallPrompt() {
         if (deferredPrompt) {
             deferredPrompt.prompt();
             const { outcome } = await deferredPrompt.userChoice;
-            if (outcome === 'accepted') {
-                console.log('App installed');
-            }
             deferredPrompt = null;
             document.getElementById('install-prompt').style.display = 'none';
         }
